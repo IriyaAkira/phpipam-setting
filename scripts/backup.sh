@@ -63,7 +63,7 @@ if [ ! -d "$MOUNT_POINT" ]; then
 fi
 
 if ! mountpoint -q "$MOUNT_POINT"; then
-    mount -t cifs "//${WIN_SERVER}/${WIN_SHARE}" "$MOUNT_POINT" \
+    mount -t cifs "//${BK_SERVER}/${BK_SHARE}" "$MOUNT_POINT" \
         -o credentials="$CRED_FILE",iocharset=utf8,vers=3.0 >> "$LOG_FILE" 2>&1
 fi
 
