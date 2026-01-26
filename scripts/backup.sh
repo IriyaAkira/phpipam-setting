@@ -70,12 +70,12 @@ fi
 
 # バックアップ
 echo "$(date '+%Y-%m-%d %H:%M:%S'): Execute backup" | tee -a "$LOG_FILE"
-SRC_DIR="${BASE_DIR}"
+SRC_DIR="${BASE_DIR}/"
 DST_DIR="${MOUNT_POINT}/docker/glpi/"
 rsync -av --delete --exclude='*/.git/'\
     "$SRC_DIR" \
     "$DST_DIR" \
-    2>&2 | tee -a "$LOG_FILE"
+    2>&1 | tee -a "$LOG_FILE"
 
 # バックアップ先のアンマウント
 echo "$(date '+%Y-%m-%d %H:%M:%S'): Unmount file server." | tee -a "$LOG_FILE"

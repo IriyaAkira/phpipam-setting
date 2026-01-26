@@ -1,6 +1,13 @@
 #!/bin/bash
 set -eu
 
+# ===== root チェック =====
+if [ "$(id -u)" -ne 0 ]; then
+  echo "ERROR: docker_project_backup.sh must be run as root."
+  exit 1
+fi
+echo "docker_project_backup.sh running as root"
+
 # ===== 固定パス定義 =====
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BASE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"

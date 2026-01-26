@@ -12,4 +12,4 @@ password=secretpassword
 domain=WORKGROUP
 ```
 
-Execute ./scripts/start.sh
+Execute sudo ./scripts/start.sh

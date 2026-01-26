@@ -1,6 +1,13 @@
 #!/bin/bash
 set -eu
 
+# ===== root チェック =====
+if [ "$(id -u)" -ne 0 ]; then
+  echo "ERROR: docker_project_backup.sh must be run as root."
+  exit 1
+fi
+echo "docker_project_backup.sh running as root"
+
 # ===== 固定パス定義 =====
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BASE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -26,6 +33,7 @@ CURRENT_CRON="$(crontab -l 2>/dev/null || true)"
 
 ## 既存登録があれば削除
 FILTERED_CRON="$(printf "%s\n" "$CURRENT_CRON" | grep -v "$CRON_TAG" || true)"
+printf "%s\n" "$FILTERED_CRON" | crontab -
 
 # ===== ログファイルの容量制限 =====
 echo "$(date '+%Y-%m-%d %H:%M:%S'): Start log file size limit" | tee -a "$LOG_FILE"
