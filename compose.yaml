@@ -2,7 +2,7 @@
 # WARNING: 'my_secret_phpipam_pass' and 'my_secret_mysql_root_pass'
 services:
   phpipam-web:
-    image: phpipam/phpipam-www:latest
+    image: phpipam/phpipam-www:v1.7.4
     ports:
       - "80:80"
     environment:
@@ -19,7 +19,7 @@ services:
       - phpipam-mariadb
 
   phpipam-cron:
-    image: phpipam/phpipam-cron:latest
+    image: phpipam/phpipam-cron:v1.7.4
     environment:
       TZ: ${TZ}
       IPAM_DATABASE_HOST: ${IPAM_DATABASE_HOST}
@@ -32,7 +32,7 @@ services:
       - phpipam-mariadb
 
   phpipam-mariadb:
-    image: mariadb:latest
+    image: mariadb:12.1.2
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       TZ: ${TZ}
@@ -42,9 +42,10 @@ services:
       - ./db_init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       # https://mariadb.com/kb/en/using-healthcheck-sh/#compose-file-example
-      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
-      interval: 5s
-      timeout: 1s
+      test: ["CMD-SHELL", "mariadb-admin ping -h localhost -p$${MYSQL_ROOT_PASSWORD} || exit 1"]
+      start_period: 10s
+      interval: 10s
+      timeout: 5s
       retries: 5
 
 volumes:
