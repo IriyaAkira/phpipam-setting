@@ -1,19 +1,19 @@
 #!/bin/bash
 set -eu
 
-# ===== root チェック =====
-if [ "$(id -u)" -ne 0 ]; then
-  echo "ERROR: docker_project_backup.sh must be run as root."
-  exit 1
-fi
-echo "docker_project_backup.sh running as root"
-
 # ===== 固定パス定義 =====
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BASE_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 DOCKER_BIN="/usr/bin/docker"
 SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
 LOG_FILE="${SCRIPT_DIR}/logs/${SCRIPT_NAME%.*}.log"
+
+# ===== root チェック =====
+if [ "$(id -u)" -ne 0 ]; then
+  echo "ERROR: ${SCRIPT_NAME} must be run as root."
+  exit 1
+fi
+echo "${SCRIPT_NAME} running as root"
 
 # ===== ログ開始 =====
 echo "==== $(date '+%Y-%m-%d %H:%M:%S') START: ${SCRIPT_NAME} ====" | tee -a "${LOG_FILE}"
@@ -30,7 +30,7 @@ echo "$(date '+%Y-%m-%d %H:%M:%S'): Starting to create a db dump." | tee -a "${L
 BACKUP_FILE="${BASE_DIR}/db_init/db_dump.sql"
 
 cd "${BASE_DIR}"
-if "${DOCKER_BIN}" compose exec -T ${IPAM_DATABASE_HOST} \
+if "${DOCKER_BIN}" compose exec -T "${IPAM_DATABASE_HOST}" \
   mariadb-dump \
     -u"${MYSQL_ROOT_USERNAME}" \
     -p"${MYSQL_ROOT_PASSWORD}" \
@@ -48,7 +48,11 @@ echo "$(date '+%Y-%m-%d %H:%M:%S'): Starting project backup." | tee -a "${LOG_FI
 # docker停止
 echo "$(date '+%Y-%m-%d %H:%M:%S'): Stop phpipam server..." | tee -a "${LOG_FILE}"
 cd "${BASE_DIR}"
-"${DOCKER_BIN}" compose down
+if "${DOCKER_BIN}" compose down 2>&1 | tee -a "${LOG_FILE}"; then
+    :
+else
+    echo "$(date '+%Y-%m-%d %H:%M:%S'): No containers found or already stopped. Continuing..." | tee -a "${LOG_FILE}"
+fi
 
 # .smbcredentialsファイルの存在チェック
 echo "$(date '+%Y-%m-%d %H:%M:%S'): Check for the existence of the .smbcredentials file" | tee -a "${LOG_FILE}"
@@ -67,15 +71,19 @@ if [ ! -d "${MOUNT_POINT}" ]; then
 fi
 
 if ! mountpoint -q "${MOUNT_POINT}"; then
-    mount -t cifs "//${BK_SERVER}/${BK_SHARE}" "${MOUNT_POINT}" \
+    if mount -t cifs "//${BK_SERVER}/${BK_SHARE}" "${MOUNT_POINT}" \
         -o credentials="${CRED_FILE}",iocharset=utf8,vers=3.0 \
-        2>&1 | tee -a "${LOG_FILE}"
+        2>&1 | tee -a "${LOG_FILE}"; then
+        echo "$(date '+%Y-%m-%d %H:%M:%S'): File server mounted successfully." | tee -a "${LOG_FILE}"
+    else
+        echo "ERROR: Failed to mount file server." | tee -a "${LOG_FILE}"
+    fi
 fi
 
 # バックアップ
 echo "$(date '+%Y-%m-%d %H:%M:%S'): Execute backup" | tee -a "${LOG_FILE}"
 SRC_DIR="${BASE_DIR}/"
-DST_DIR="${MOUNT_POINT}/docker/glpi/"
+DST_DIR="${MOUNT_POINT}/docker/$(basename "${BASE_DIR}")/"
 rsync -av --delete --exclude='*/.git/'\
     "${SRC_DIR}" \
     "${DST_DIR}" \
@@ -83,7 +91,11 @@ rsync -av --delete --exclude='*/.git/'\
 
 # バックアップ先のアンマウント
 echo "$(date '+%Y-%m-%d %H:%M:%S'): Unmount file server." | tee -a "${LOG_FILE}"
-umount "${MOUNT_POINT}"
+if umount "${MOUNT_POINT}" 2>&1 | tee -a "${LOG_FILE}"; then
+    echo "$(date '+%Y-%m-%d %H:%M:%S'): File server unmounted successfully." | tee -a "${LOG_FILE}"
+else
+    echo "$(date '+%Y-%m-%d %H:%M:%S'): WARNING: Failed to unmount file server. Continuing..." | tee -a "${LOG_FILE}"
+fi
 
 # 再スタート処理
 echo "$(date '+%Y-%m-%d %H:%M:%S'): Execute the start script" | tee -a "${LOG_FILE}"
