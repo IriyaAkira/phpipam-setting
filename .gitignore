@@ -2,3 +2,8 @@
 logs/
 log/
 db_init/
+*.crt
+*.csr
+*.key
+*.cnf
+*.cer
