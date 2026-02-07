@@ -34,7 +34,7 @@ services:
       TZ: ${TZ}
       IPAM_DATABASE_HOST: ${IPAM_DATABASE_HOST}
       IPAM_DATABASE_PASS: ${IPAM_DATABASE_PASS}
-      SCAN_INTERVAL: 5m
+      SCAN_INTERVAL: ${SCAN_INTERVAL}
     restart: unless-stopped
     volumes:
       - phpipam-ca:/usr/local/share/ca-certificates:ro
