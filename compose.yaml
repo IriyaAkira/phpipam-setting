@@ -19,7 +19,8 @@ services:
       IPAM_DATABASE_HOST: ${IPAM_DATABASE_HOST}
       IPAM_DATABASE_PASS: ${IPAM_DATABASE_PASS}
       IPAM_DATABASE_WEBHOST: ${IPAM_DATABASE_WEBHOST}
-      IPAM_DISABLE_INSTALLER: 1
+      IPAM_TRUST_X_FORWARDED: ${IPAM_TRUST_X_FORWARDED}
+      IPAM_DISABLE_INSTALLER: ${IPAM_DISABLE_INSTALLER}
     restart: unless-stopped
     volumes:
       - phpipam-logo:/phpipam/css/images/logo
