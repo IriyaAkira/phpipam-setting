@@ -1,3 +1,15 @@
+# HTTPS → HTTP リダイレクト
+server {
+    listen 443 ssl;
+    server_name _;
+
+    ssl_certificate     /etc/nginx/certs/phpipam.crt;
+    ssl_certificate_key /etc/nginx/certs/phpipam.key;
+
+    return 301 http://$host$request_uri;
+}
+
+# HTTP 正常系
 server {
     listen 80;
     server_name _;

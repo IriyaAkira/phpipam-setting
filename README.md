@@ -32,6 +32,15 @@ ln -sf phpipam.conf.http phpipam.conf
 # If you want to use HTTPS.
 ln -sf phpipam.conf.https phpipam.conf
 ```
+However, in the case of HTTP, you need to execute the following script or prepare a dummy certificate by other methods.
+```bash
+./phpipam/scripts/create_dummy_self-singed_certificate.sh
+
+# When the above script is executed, rewrite the corresponding section of the following file for dummy use.
+vi ./phpipam/nginx/conf.d/phpiapm.conf.http
+    ssl_certificate     /etc/nginx/certs/dummy.crt;
+    ssl_certificate_key /etc/nginx/certs/dummy.key;
+```
 
 Run the following as root.  
 Executing this will complete the cron setup for daily project backups and the launch of the service.
