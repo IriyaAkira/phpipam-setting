@@ -28,6 +28,28 @@ else
     echo "$(date '+%Y-%m-%d %H:%M:%S'): WARNING: Failed to stop phpipam server or containers not found. Continuing..." | tee -a "${LOG_FILE}"
 fi
 
+# ===== コンテナ停止確認 =====
+echo "$(date '+%Y-%m-%d %H:%M:%S'): Waiting for all containers to be down..." | tee -a "${LOG_FILE}"
+MAX_RETRIES=30
+RETRY_COUNT=0
+WAIT_INTERVAL=1
+
+while [ ${RETRY_COUNT} -lt ${MAX_RETRIES} ]; do
+    RUNNING_CONTAINERS=$("${DOCKER_BIN}" compose ps -q 2>/dev/null | wc -l)
+    if [ "${RUNNING_CONTAINERS}" -eq 0 ]; then
+        echo "$(date '+%Y-%m-%d %H:%M:%S'): All containers are down." | tee -a "${LOG_FILE}"
+        break
+    fi
+    echo "$(date '+%Y-%m-%d %H:%M:%S'): Still waiting... (${RETRY_COUNT}/${MAX_RETRIES}) Running containers: ${RUNNING_CONTAINERS}" | tee -a "${LOG_FILE}"
+    sleep ${WAIT_INTERVAL}
+    RETRY_COUNT=$((RETRY_COUNT + 1))
+done
+
+if [ ${RETRY_COUNT} -ge ${MAX_RETRIES} ]; then
+    echo "$(date '+%Y-%m-%d %H:%M:%S'): WARNING: Timeout waiting for containers to stop. Current status:" | tee -a "${LOG_FILE}"
+    "${DOCKER_BIN}" compose ps 2>&1 | tee -a "${LOG_FILE}"
+fi
+
 # ===== 定期バックアップ用のcron解除 =====
 echo "$(date '+%Y-%m-%d %H:%M:%S'): Disable cron..." | tee -a "${LOG_FILE}"
 CRON_TAG="phpipam_backup"

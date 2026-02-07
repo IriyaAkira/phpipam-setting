@@ -7,17 +7,30 @@ git clone https://github.com/IriyaAkira/phpipam-setting.git phpipam
 
 Edit ./phpipam/.env
 ```yaml
+# Extract only the parts that need to be changed.
+TZ=Asia/Tokyo
+IPAM_DATABASE_PASS=my_secret_phpipam_pass
+MYSQL_ROOT_PASSWORD=my_secret_mysql_root_pass
 # For Backup
 BK_SERVER=HOSTNAME
 BK_SHARE=SHARENAME
 MOUNT_POINT=/mnt/foo/bar
 ```
 
-Edit /root/.smbcredentials
+Edit /root/.smbcredentials For backup.
 ```yaml
 username=smbuser
 password=secretpassword
 domain=WORKGROUP
+```
+
+By executing the command below, you can change whether to use HTTP only or HTTPS only.
+```bash
+cd ./phpipam/nginx/conf.d
+# If you want to use HTTP.
+ln -sf phpipam.conf.http phpipam.conf
+# If you want to use HTTPS.
+ln -sf phpipam.conf.https phpipam.conf
 ```
 
 Run the following as root.  
